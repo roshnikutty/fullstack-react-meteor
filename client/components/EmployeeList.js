@@ -1,21 +1,37 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { withTracker } from 'meteor/react-meteor-data';
 import { Employees } from '../../imports/collections/employees';
 import EmployeeDetail from './EmployeeDetail';
 
-let EmployeeList = (props) => {
+const PER_PAGE_EMPLOYEES = 20;
+
+class EmployeeList extends Component {
     // console.log(props.employees) will give the 20 employees subscribed below
+    componentWillMount() {
+        this.page = 1;      //page count on load
+    }
 
-    let employeeList = props.employees.map((employee, index) =>
-        <EmployeeDetail key={index} employee={employee} />); //pass each employee as prop to EmployeeDetail
+    handleSubmit() {
+        Meteor.subscribe('employees', PER_PAGE_EMPLOYEES * (this.page + 1))
+        this.page++;
+    }
 
-    return (
-        <div>
-            <div className='employee-list'>
-                {employeeList}
+    //pass each employee as prop to EmployeeDetail
+    render() {
+        return (
+            <div>
+                <div className='employee-list'>
+                    {this.props.employees.map((employee) =>
+                        <EmployeeDetail key={employee._id} employee={employee} />)
+                    }
+                </div>
+                <button className='btn btn-primary'
+                    onClick={() => this.handleSubmit()}>
+                    Load More...
+            </button>
             </div>
-        </div>
-    );
+        );
+    }
 }
 
 //'react-meteor-data' allows to create container
@@ -26,7 +42,7 @@ let EmployeeList = (props) => {
 
 export default withTracker(() => {
     //set up subscription
-    Meteor.subscribe('employees');
+    Meteor.subscribe('employees', PER_PAGE_EMPLOYEES);
 
     //return object that will be sent to EmployeeList as props
     return { employees: Employees.find({}).fetch() }  //finds records and fetches them
